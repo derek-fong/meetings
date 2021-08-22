@@ -1,5 +1,5 @@
 import React from 'react';
-import { withStyles } from '@material-ui/core/styles';
+import { makeStyles } from '@material-ui/core/styles';
 import { withRouter } from 'react-router-dom';
 import { throttle } from 'lodash';
 // redux
@@ -8,48 +8,45 @@ import { raiseHand, doneTalking } from '../../redux/actions/SocketAction';
 
 //UI
 import { Button, List } from '@material-ui/core';
-import { styles } from '../../UI_Components/UIComponents';
+import { styles, altStyles } from '../../UI_Components/UIComponents';
 import MeetingQueueListItem from './MeetingQueueListItem';
 
-class MeetingQueueMode extends React.Component {
-  constructor(props) {
-    super(props);
-    this.raise = this.raise.bind(this);
-  }
+const MeetingQueueMode = (props) => {
+  const useStyles = makeStyles(props.isDarkMode ? altStyles : styles);
+  const classes = useStyles();
 
-  raise = throttle(
+  const raise = throttle(
     (roomId, userName) => {
       const userObj = {
         userName: userName,
-        fullName: this.props.fullName,
+        fullName: props.fullName,
       };
-      this.props.raiseHand(roomId, userObj);
+      props.raiseHand(roomId, userObj);
     },
     1000,
     { trailing: false }
   );
 
-  finishTalking = throttle(
+  const finishTalking = throttle(
     (roomId, userName) => {
-      this.props.doneTalking(roomId, userName);
+      props.doneTalking(roomId, userName);
     },
     1000,
     { trailing: false }
   );
 
-  //Card header action
-  userNameFirstLetterGetter = (userName) => {
+  const userNameFirstLetterGetter = (userName) => {
     var res = userName.charAt(0);
     return res.toUpperCase();
   };
 
-  renderButton = () => {
-    const { classes, userName, queue } = this.props;
-    const roomId = this.props.match.params.roomId;
+  const renderButton = () => {
+    const { userName, queue } = props;
+    const roomId = props.match.params.roomId;
     let buttonLabel = 'Raise';
-    let handler = () => this.raise(roomId, userName);
+    let handler = () => raise(roomId, userName);
     if (queue[0] && queue[0].userName === userName) {
-      handler = () => this.finishTalking(roomId, userName);
+      handler = () => finishTalking(roomId, userName);
       buttonLabel = 'Done';
     } else if (queue.find((u) => u.userName === userName)) {
       handler = () => {};
@@ -67,33 +64,30 @@ class MeetingQueueMode extends React.Component {
     );
   };
 
-  render() {
-    const { classes, queue } = this.props;
-    return (
-      <div>
-        <div className={classes.mappingItemContainer}>
-          <h1>Queue</h1>
-          {Array.isArray(queue) && queue.length > 0 && (
-            <List>
-              {queue.map((q, i) => (
-                <MeetingQueueListItem
-                  classes={classes}
-                  key={i}
-                  userName={q.fullName}
-                  userNameFirstLetter={this.userNameFirstLetterGetter(
-                    q.fullName
-                  )}
-                />
-              ))}
-            </List>
-          )}
-        </div>
-        <div className={classes.bottomNav}>
-          <div>{this.renderButton()}</div>
-        </div>
+  return (
+    <div>
+      <div className={classes.mappingItemContainer}>
+        <h1>Queue</h1>
+        {Array.isArray(props.queue) && props.queue.length > 0 && (
+          <List>
+            {props.queue.map((q, i) => (
+              <MeetingQueueListItem
+                classes={classes}
+                key={i}
+                userName={q.fullName}
+                userNameFirstLetter={userNameFirstLetterGetter(
+                  q.fullName
+                )}
+              />
+            ))}
+          </List>
+        )}
       </div>
-    );
-  }
+      <div className={classes.bottomNav}>
+        <div>{renderButton()}</div>
+      </div>
+    </div>
+  );
 }
 
 const mapStateToProps = (state) => {
@@ -101,6 +95,7 @@ const mapStateToProps = (state) => {
     connectionStatus: state.room.connectionStatus,
     roomId: state.room.roomId,
     queue: state.room.queue,
+    isDarkMode: state.theme.isDarkMode,
     userName: state.user.userName,
     fullName: state.user.fullName,
     members: state.room.members,
@@ -123,5 +118,5 @@ export default withRouter(
   connect(
     mapStateToProps,
     mapDispatchToProps
-  )(withStyles(styles)(MeetingQueueMode))
+  )((MeetingQueueMode))
 );

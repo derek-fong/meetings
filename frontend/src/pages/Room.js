@@ -22,6 +22,8 @@ import Alert from '@material-ui/lab/Alert';
 import { withStyles } from "@material-ui/core/styles";
 import {Close,Share,FileCopyOutlined, Refresh} from '@material-ui/icons';
 import { styles } from "../UI_Components/UIComponents"
+import ThemeToggle from '../Components/ThemeToggle';
+
 class Room extends React.Component {
   constructor(props) {
     super(props);
@@ -229,6 +231,7 @@ class Room extends React.Component {
                   <HelpOutline/>
                 </IconButton>
               </Tooltip> */}
+              <ThemeToggle />
               <Tooltip title ={is_admin ? ("View member & Change mode") : ("View member")} arrow>
                 <Avatar className={classes.headAvatar} onClick={this.toggleDrawer(true,"right")}>
                   {this.userNameFirstLetterGetter(fullName)}
